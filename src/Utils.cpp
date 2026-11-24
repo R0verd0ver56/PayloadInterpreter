@@ -33,7 +33,6 @@ void Utils::SGTM(float a_in)
 /*Converts a string view into an int, safe for none null-terminated string views. Returns false if conversion isn't successful.*/
 bool Utils::string_view::to_int(std::string_view input, int& out)
 {
-	logger::info("to_int for {}", input);
 	const std::from_chars_result res = std::from_chars(input.data(), input.data() + input.size(), out);
 	if (res.ec == std::errc::invalid_argument || res.ec == std::errc::result_out_of_range) {
 		return false;
