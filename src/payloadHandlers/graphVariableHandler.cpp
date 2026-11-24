@@ -1,6 +1,11 @@
 #pragma once
 #include "payloadHandler.h"
 
+// DIAGNOSTIC BUILD: logs every graph variable set by a payload, with the actor and the value.
+// Log lines look like:  SGV[P] I MCO_nextattack = 2   (P = player, N = npc)
+
+static inline const char* SGVTag(RE::Actor* a) { return (a && a->IsPlayerRef()) ? "P" : "N"; }
+
 void graphVariableHandler::setGraphVariableBool(RE::Actor* actor, std::vector<std::string_view>* in)
 {
 	bool b;
@@ -8,8 +13,9 @@ void graphVariableHandler::setGraphVariableBool(RE::Actor* actor, std::vector<st
 		printErrMsg(in, "Invalid argument for setGraphVariableBool.");
 		return;
 	}
-	
-	actor->SetGraphVariableBool(std::string(in->at(1)), b);
+	bool ok = actor->SetGraphVariableBool(std::string(in->at(1)), b);
+	if (actor->IsPlayerRef())
+		logger::info("SGV[{}] B {} = {} ok={}", SGVTag(actor), in->at(1), b, ok);
 }
 
 void graphVariableHandler::setGraphVariableFloat(RE::Actor* actor, std::vector<std::string_view>* in)
@@ -19,7 +25,9 @@ void graphVariableHandler::setGraphVariableFloat(RE::Actor* actor, std::vector<s
 		printErrMsg(in, "Invalid argument for setGraphVariableFloat.");
 		return;
 	}
-	actor->SetGraphVariableFloat(std::string(in->at(1)), f);
+	bool ok = actor->SetGraphVariableFloat(std::string(in->at(1)), f);
+	if (actor->IsPlayerRef())
+		logger::info("SGV[{}] F {} = {} ok={}", SGVTag(actor), in->at(1), f, ok);
 }
 
 void graphVariableHandler::setGraphVariableInt(RE::Actor* actor, std::vector<std::string_view>* in)
@@ -29,9 +37,10 @@ void graphVariableHandler::setGraphVariableInt(RE::Actor* actor, std::vector<std
 		printErrMsg(in, "Invalid argument for setGraphVariableInt.");
 		return;
 	}
-	actor->SetGraphVariableInt(std::string(in->at(1)), i);
+	bool ok = actor->SetGraphVariableInt(std::string(in->at(1)), i);
+	if (actor->IsPlayerRef())
+		logger::info("SGV[{}] I {} = {} ok={}", SGVTag(actor), in->at(1), i, ok);
 }
-
 
 void graphVariableHandler::process(RE::Actor* actor, std::vector<std::string_view>* param, GRAPHVARIABLETYPE graphVariableType)
 {
@@ -44,10 +53,3 @@ void graphVariableHandler::process(RE::Actor* actor, std::vector<std::string_vie
 	case GRAPHVARIABLETYPE::Int: setGraphVariableInt(actor, param); break;
 	}
 }
-
-
-/*
-@SGVB|"string of graph variable"|0(False)/1(True)| - set graph variable bool
-@SGVF|"string of graph variable"|any float value| - set graph variable float
-@SGVI|"string of graph variable"|any int value| - set graph variable int
-*/
